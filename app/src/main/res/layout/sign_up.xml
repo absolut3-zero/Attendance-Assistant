@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <include android:layout_height="wrap_content" android:layout_width="match_parent" layout="@layout/toolbar"/>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+
+    <TextView
+        android:id="@+id/tvRegistration"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center"
+        android:text="@string/sign_up_title"
+        android:textStyle="bold"
+        android:textSize="40sp" />
+            <android.support.v7.widget.CardView
+                android:layout_gravity="center"
+                android:padding="3.0dip"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_margin="3.0dip"
+                card_view:cardCornerRadius="6.0dip">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="10dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/first_name"
+                        android:textSize="15sp"/>
+
+                    <EditText
+                        android:id="@+id/etFirstName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+                        android:ems="10"
+                        android:inputType="textPersonName"
+                        android:hint="@string/first_name_hint" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/last_name"
+                        android:textSize="15sp"/>
+                    <EditText
+                        android:id="@+id/etLastName"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+                        android:ems="10"
+                        android:inputType="textPersonName"
+                        android:hint="@string/last_name_hint" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/roll_no"
+                        android:textSize="15sp"/>
+                    <EditText
+                        android:id="@+id/etRoll"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+                        android:ems="10"
+                        android:inputType="text"
+                        android:hint="@string/roll_no_hint" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="10dp"
+                        android:text="@string/phone_no"
+                        android:textSize="15sp"/>
+                    <EditText
+                        android:id="@+id/etPhone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:padding="10dp"
+                        android:ems="10"
+                        android:inputType="phone"
+                        android:hint="@string/phone_no_hint" />
+                    <android.support.v7.widget.AppCompatButton
+                        android:id="@+id/bttnSubmit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:text="@string/button_submit"
+                        style="@style/Widget.AppCompat.Button.Colored"/>
+                </LinearLayout>
+            </android.support.v7.widget.CardView>
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:gravity="center"
+                android:text="@string/note_sign_up" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/copyright" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

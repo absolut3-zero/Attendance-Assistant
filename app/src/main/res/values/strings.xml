@@ -1,0 +1,41 @@
+<resources>
+    <string name="app_name">Attendance Assistant</string>
+    <string name="app_title">\t\tAttendance Assistant</string>
+    <string name="copyright">&#169; Absolute Zero 2018</string>
+    <!--cards-->
+    <string name="card_proximity">Proximity Check :</string>
+    <string name="card_serial">Serial number Check :</string>
+    <string name="card_device">Device Authentication :</string>
+    <string name="card_phone">Phone number Authentication :</string>
+    <string name="card_not_checked">Not Checked</string>
+    <!--buttons-->
+    <string name="button_check">Check</string>
+    <string name="button_present">Present</string>
+    <string name="button_submit">Submit</string>
+    <string name="button_sign_up">Sign Up</string>
+    <string name="button_log_in">Log In</string>
+    <!--SignUp-->
+    <string name="sign_up_title">Registration</string>
+    <string name="first_name">First Name :</string>
+    <string name="first_name_hint">Enter first name</string>
+    <string name="last_name">Last Name :</string>
+    <string name="last_name_hint">Enter last name</string>
+    <string name="roll_no">Roll Number :</string>
+    <string name="roll_no_hint">Enter university roll number</string>
+    <string name="phone_no">Phone Number :</string>
+    <string name="phone_no_hint">Enter phone number without country code</string>
+    <string name="note_sign_up">All fields are mandatory. Please make sure information entered here is correct as you can not make in-app changes later. </string>
+    <!--LogIn-->
+    <string name="log_in_title">Log In</string>
+    <string name="enter_roll">Enter your Roll number:</string>
+    <string name="enter_roll_hint">Roll number&#8230;</string>
+    <string name="enter_roll_hint_extra">(exactly like you entered at the time of registering)</string>
+    <!--TimeCheckTask-->
+    <string name="time_start">90000</string>
+    <string name="time_stop">120000</string>
+    <!--PresentActivity-->
+    <string name="attendance_done">Attendance Done!</string>
+    <string name="attendance_already_done">Today\'s attendance already done</string>
+    <string name="present_database_error">Database Error, try after a while</string>
+    <string name="time_limit_exceeded">Valid time for attendance is from 9 AM to 12 PM</string>
+</resources>
