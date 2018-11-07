@@ -6,8 +6,8 @@ import org.apache.commons.net.time.TimeTCPClient;
 
 import java.io.IOException;
 
-public class DateCheckTask extends AsyncTask<Void,Void,Integer>{
-//    private WeakReference<Context> contextWeakReference;
+public class DateCheckTask extends AsyncTask<Void, Void, Integer> {
+    //    private WeakReference<Context> contextWeakReference;
 //    public DateCheckTask(Context context){
 //        contextWeakReference = new WeakReference<>(context);
 //    }
@@ -20,16 +20,14 @@ public class DateCheckTask extends AsyncTask<Void,Void,Integer>{
                 timeTCPClient.setDefaultTimeout(30000);
                 timeTCPClient.connect("time.nist.gov");
                 rawDate = timeTCPClient.getDate().toString();
-            }
-            finally {
+            } finally {
                 timeTCPClient.disconnect();
             }
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
-        if (rawDate != null){
-            String strDate = rawDate.substring(8,10);
+        if (rawDate != null) {
+            String strDate = rawDate.substring(8, 10);
             return Integer.parseInt(strDate);
         }
         return 77;

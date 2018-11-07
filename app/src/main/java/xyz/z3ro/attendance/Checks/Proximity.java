@@ -15,11 +15,6 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -31,6 +26,11 @@ import com.google.firebase.database.ValueEventListener;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import dmax.dialog.SpotsDialog;
 import xyz.z3ro.attendance.Constants;
 import xyz.z3ro.attendance.R;
@@ -57,15 +57,15 @@ public class Proximity extends AppCompatActivity {
         setContentView(R.layout.proximity_check);
         Toolbar toolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(toolbar);
-        if(getSupportActionBar() != null){
+        if (getSupportActionBar() != null) {
             getSupportActionBar().setIcon(R.mipmap.ic_launcher_round);
             getSupportActionBar().setTitle(R.string.app_title);
         }
         // Initializations
         context_proximity = this;
-        sharedPreferences = this.getSharedPreferences(Constants.PREFERENCE_FILE_NAME,this.MODE_PRIVATE);
+        sharedPreferences = this.getSharedPreferences(Constants.PREFERENCE_FILE_NAME, this.MODE_PRIVATE);
         databaseReference = FirebaseDatabase.getInstance().getReference();
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiManager = (WifiManager) this.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         returnIntent = new Intent();
         progressDialog = new SpotsDialog.Builder().setContext(this).setCancelable(false).setTheme(R.style.Custom).build();
         isSSIDAvailable = false;
@@ -79,16 +79,17 @@ public class Proximity extends AppCompatActivity {
                 int i;
                 List<ScanResult> scanResults = wifiManager.getScanResults();
                 int size = scanResults.size();
-                for (i=0;i<size;i++){
+                for (i = 0; i < size; i++) {
                     if (scanResults.get(i).SSID.equals(networkSSID))
                         isSSIDAvailable = true;
                 }
-                if (isSSIDAvailable){
+                if (isSSIDAvailable) {
 //                    Toast.makeText(context,"SSID available",Toast.LENGTH_LONG).show();
-                        connect();
-                }
-                else {
+                    connect();
+                } else {
                     // TODO when ssid not available
+                    Log.d("XXXXX", "FAILED AT SSID RECEIVER");
+                    Log.d("XXXX", networkSSID + " " + networkPass + " " + bssidStored);
                     result(false);
                     Finish();
                 }
@@ -98,19 +99,19 @@ public class Proximity extends AppCompatActivity {
         connectReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())){
+                if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(intent.getAction())) {
                     NetworkInfo networkInfo = intent.getParcelableExtra(WifiManager.EXTRA_NETWORK_INFO);
-                    if (NetworkInfo.State.CONNECTED.equals(networkInfo.getState())){
+                    if (NetworkInfo.State.CONNECTED.equals(networkInfo.getState())) {
                         wifiInfo = wifiManager.getConnectionInfo();
-                        if (wifiInfo.getBSSID().equals(bssidStored)){
+                        if (wifiInfo.getBSSID().equals(bssidStored)) {
 //                            Toast.makeText(context,"Yeah!!!",Toast.LENGTH_LONG).show();
                             // TODO SUCCESS
                             result(true);
                             Finish();
-                        }
-                        else {
+                        } else {
 //                            Toast.makeText(context,"Noooo!!",Toast.LENGTH_LONG).show();
                             // TODO BSSID FAILURE
+                            Log.d("XXXXX", "FAILED AT CONNECT RECEIVER");
                             result(false);
                             Finish();
                         }
@@ -120,7 +121,7 @@ public class Proximity extends AppCompatActivity {
         };
 
         // register receiver for scan
-        context_proximity.registerReceiver(scanReceiver,new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
+        context_proximity.registerReceiver(scanReceiver, new IntentFilter(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION));
 
         // Show progress dialog and enable wifi
         wifiManager.setWifiEnabled(true);
@@ -130,7 +131,7 @@ public class Proximity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        CountDownTimer countDownTimer = new CountDownTimer(60000,1000) {
+        CountDownTimer countDownTimer = new CountDownTimer(60000, 1000) {
             @Override
             public void onTick(long l) {
 
@@ -146,11 +147,11 @@ public class Proximity extends AppCompatActivity {
         if (ContextCompat.checkSelfPermission(context_proximity, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
             getSSID();
         else {
-            Toast.makeText(context_proximity,"App permissions error",Toast.LENGTH_LONG).show();
+            Toast.makeText(context_proximity, "App permissions error", Toast.LENGTH_LONG).show();
             result(false);
             finish();
         }
-        context_proximity.registerReceiver(connectReceiver,new IntentFilter((WifiManager.NETWORK_STATE_CHANGED_ACTION)));
+        context_proximity.registerReceiver(connectReceiver, new IntentFilter((WifiManager.NETWORK_STATE_CHANGED_ACTION)));
     }
 
     @Override
@@ -161,7 +162,7 @@ public class Proximity extends AppCompatActivity {
     }
 
 
-    private void getSSID(){
+    private void getSSID() {
         databaseReference.child("Proximity").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -175,21 +176,22 @@ public class Proximity extends AppCompatActivity {
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
                 // TODO 1
+                Log.d("XXXXX", "FAILED TO GET SSID FROM FIREBASE");
                 result(false);
                 Finish();
             }
-    });
+        });
     }
 
-    private void connect(){
+    private void connect() {
         WifiConfiguration wifiConfiguration = new WifiConfiguration();
         wifiConfiguration.SSID = "\"" + networkSSID + "\"";
-        wifiConfiguration.preSharedKey = "\""+ networkPass +"\"";
+        wifiConfiguration.preSharedKey = "\"" + networkPass + "\"";
         wifiManager.addNetwork(wifiConfiguration);
 //        Toast.makeText(context_proximity,"Attempting to connect",Toast.LENGTH_SHORT).show();
         List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
-        for( WifiConfiguration i : list ) {
-            if(i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
+        for (WifiConfiguration i : list) {
+            if (i.SSID != null && i.SSID.equals("\"" + networkSSID + "\"")) {
                 wifiManager.disconnect();
                 wifiManager.enableNetwork(i.networkId, true);
                 wifiManager.reconnect();
@@ -198,25 +200,26 @@ public class Proximity extends AppCompatActivity {
             }
         }
     }
-    private void  result(boolean pass){
-        if (pass){
-            sharedPreferences.edit().putBoolean(Constants.PROXIMITY_CHECK,true).apply();
-            returnIntent.putExtra("resultProximity",true);
-            setResult(RESULT_OK,returnIntent);
-            Log.d("result","success");
+
+    private void result(boolean pass) {
+        if (pass) {
+            sharedPreferences.edit().putBoolean(Constants.PROXIMITY_CHECK, true).apply();
+            returnIntent.putExtra("resultProximity", true);
+            setResult(RESULT_OK, returnIntent);
+            Log.d("result", "success");
             wifiManager.setWifiEnabled(false);
             progressDialog.dismiss();
-        }
-        else {
-            sharedPreferences.edit().putBoolean(Constants.PROXIMITY_CHECK,false).apply();
-            returnIntent.putExtra("resultProximity",false);
-            setResult(RESULT_OK,returnIntent);
-            Log.d("result","failure");
+        } else {
+            sharedPreferences.edit().putBoolean(Constants.PROXIMITY_CHECK, false).apply();
+            returnIntent.putExtra("resultProximity", false);
+            setResult(RESULT_OK, returnIntent);
+            Log.d("result", "failure");
             wifiManager.setWifiEnabled(false);
             progressDialog.dismiss();
         }
     }
-    public void Finish(){
+
+    public void Finish() {
         super.finish();
     }
 }

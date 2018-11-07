@@ -6,11 +6,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -34,11 +29,16 @@ import com.stfalcon.smsverifycatcher.SmsVerifyCatcher;
 
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import dmax.dialog.SpotsDialog;
 import xyz.z3ro.attendance.Constants;
 import xyz.z3ro.attendance.R;
 
-public class Phone extends AppCompatActivity{
+public class Phone extends AppCompatActivity {
     Context context_phone;
     private DatabaseReference databaseReference;
     private FirebaseAuth firebaseAuth;
@@ -50,13 +50,14 @@ public class Phone extends AppCompatActivity{
     private SharedPreferences sharedPreferences;
     private boolean verificationDone;
     Intent returnIntent;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.phone_check);
         Toolbar toolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(toolbar);
-        if(getSupportActionBar() != null){
+        if (getSupportActionBar() != null) {
             getSupportActionBar().setIcon(R.mipmap.ic_launcher_round);
             getSupportActionBar().setTitle(R.string.app_title);
         }
@@ -67,17 +68,17 @@ public class Phone extends AppCompatActivity{
         progressDialog = new SpotsDialog.Builder().setContext(this).setCancelable(false).setTheme(R.style.Custom).build();
         returnIntent = new Intent();
         progressDialog.show();
-        sharedPreferences = this.getSharedPreferences(Constants.PREFERENCE_FILE_NAME,this.MODE_PRIVATE);
+        sharedPreferences = this.getSharedPreferences(Constants.PREFERENCE_FILE_NAME, this.MODE_PRIVATE);
         smsVerifyCatcher = new SmsVerifyCatcher(this, new OnSmsCatchListener<String>() {
             @Override
             public void onSmsCatch(String message) {
-                if (!verificationDone){
+                if (!verificationDone) {
                     verificationDone = true;
-                    otp = message.substring(0,6);
+                    otp = message.substring(0, 6);
 //                    otp = "654321";
-                    Log.d("SMSCATCH",otp);
+                    Log.d("SMSCATCH", otp);
                     PhoneAuthCredential credential = PhoneAuthProvider.getCredential(VerificationId, otp);
-                    Toast.makeText(context_phone,"Verification Done",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context_phone, "Verification Done", Toast.LENGTH_SHORT).show();
                     signInWithPhoneAuthCredential(credential);
                 }
             }
@@ -86,15 +87,15 @@ public class Phone extends AppCompatActivity{
             @Override
             public void onVerificationCompleted(PhoneAuthCredential phoneAuthCredential) {
                 verificationDone = true;
-                Toast.makeText(context_phone,"Verification Done",Toast.LENGTH_SHORT).show();
+                Toast.makeText(context_phone, "Verification Done", Toast.LENGTH_SHORT).show();
                 signInWithPhoneAuthCredential(phoneAuthCredential);
             }
 
             @Override
             public void onVerificationFailed(FirebaseException e) {
-                Toast.makeText(context_phone,"Verification Not Done",Toast.LENGTH_SHORT).show();
-                if (e instanceof FirebaseTooManyRequestsException){
-                    Toast.makeText(context_phone,"Quota Exceeded",Toast.LENGTH_SHORT).show();
+                Toast.makeText(context_phone, "Verification Not Done", Toast.LENGTH_SHORT).show();
+                if (e instanceof FirebaseTooManyRequestsException) {
+                    Toast.makeText(context_phone, "Quota Exceeded", Toast.LENGTH_SHORT).show();
                 }
                 result(false);
             }
@@ -110,9 +111,10 @@ public class Phone extends AppCompatActivity{
                 // Save verification ID and resending token so we can use them later
                 VerificationId = verificationId;
             }
+
             @Override
-            public void onCodeAutoRetrievalTimeOut(String verificationId){
-                Toast.makeText(context_phone,"Timeout!",Toast.LENGTH_SHORT).show();
+            public void onCodeAutoRetrievalTimeOut(String verificationId) {
+                Toast.makeText(context_phone, "Timeout!", Toast.LENGTH_SHORT).show();
                 result(false);
             }
         };
@@ -126,7 +128,7 @@ public class Phone extends AppCompatActivity{
                 ContextCompat.checkSelfPermission(context_phone, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED)
             getPhoneNumber();
         else {
-            Toast.makeText(context_phone,"App permissions error",Toast.LENGTH_LONG).show();
+            Toast.makeText(context_phone, "App permissions error", Toast.LENGTH_LONG).show();
             result(false);
         }
     }
@@ -140,10 +142,11 @@ public class Phone extends AppCompatActivity{
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        smsVerifyCatcher.onRequestPermissionsResult(requestCode,permissions,grantResults);
+        smsVerifyCatcher.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
-    private void getPhoneNumber(){
-        String rollNo = sharedPreferences.getString(Constants.ROLL,null);
+
+    private void getPhoneNumber() {
+        String rollNo = sharedPreferences.getString(Constants.ROLL, null);
         databaseReference.child("Students").child(rollNo).child("phone_number").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -153,13 +156,13 @@ public class Phone extends AppCompatActivity{
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(context_phone,"Verification Failed",Toast.LENGTH_SHORT).show();
+                Toast.makeText(context_phone, "Verification Failed", Toast.LENGTH_SHORT).show();
                 result(false);
             }
         });
     }
 
-    private void startPhoneVerification(String phoneNo){
+    private void startPhoneVerification(String phoneNo) {
         PhoneAuthProvider.getInstance().verifyPhoneNumber(
                 phoneNo,
                 60,
@@ -167,6 +170,7 @@ public class Phone extends AppCompatActivity{
                 this,
                 mCallbacks);
     }
+
     // [START sign_in_with_phone]
     private void signInWithPhoneAuthCredential(PhoneAuthCredential credential) {
         firebaseAuth.signInWithCredential(credential)
@@ -185,7 +189,7 @@ public class Phone extends AppCompatActivity{
                             Log.w("SIGN_IN", "signInWithCredential:failure", task.getException());
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 // The verification code entered was invalid
-                                Toast.makeText(context_phone,"Verification Failed",Toast.LENGTH_SHORT).show();
+                                Toast.makeText(context_phone, "Verification Failed", Toast.LENGTH_SHORT).show();
                                 result(false);
                             }
                         }
@@ -194,18 +198,17 @@ public class Phone extends AppCompatActivity{
     }
     // [END sign_in_with_phone]
 
-    private void  result(boolean pass){
-        if (pass){
-            sharedPreferences.edit().putBoolean(Constants.PHONE_CHECK,true).apply();
-            returnIntent.putExtra("resultPhone",true);
-            setResult(RESULT_OK,returnIntent);
+    private void result(boolean pass) {
+        if (pass) {
+            sharedPreferences.edit().putBoolean(Constants.PHONE_CHECK, true).apply();
+            returnIntent.putExtra("resultPhone", true);
+            setResult(RESULT_OK, returnIntent);
             progressDialog.dismiss();
             finish();
-        }
-        else {
-            sharedPreferences.edit().putBoolean(Constants.PHONE_CHECK,false).apply();
-            returnIntent.putExtra("resultPhone",false);
-            setResult(RESULT_OK,returnIntent);
+        } else {
+            sharedPreferences.edit().putBoolean(Constants.PHONE_CHECK, false).apply();
+            returnIntent.putExtra("resultPhone", false);
+            setResult(RESULT_OK, returnIntent);
             progressDialog.dismiss();
             finish();
         }

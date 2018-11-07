@@ -7,11 +7,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 import android.widget.Toast;
 
@@ -21,12 +16,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import dmax.dialog.SpotsDialog;
 import xyz.z3ro.attendance.Constants;
 import xyz.z3ro.attendance.R;
 import xyz.z3ro.attendance.Utilities.Utils;
 
-public class Device extends AppCompatActivity{
+public class Device extends AppCompatActivity {
     private Context context_device;
     private SharedPreferences sharedPreferences;
     private AlertDialog progressDialog;
@@ -47,18 +47,18 @@ public class Device extends AppCompatActivity{
         setContentView(R.layout.device_check);
         Toolbar toolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(toolbar);
-        if(getSupportActionBar() != null){
+        if (getSupportActionBar() != null) {
             getSupportActionBar().setIcon(R.mipmap.ic_launcher_round);
             getSupportActionBar().setTitle(R.string.app_title);
         }
         // Initializations
         context_device = this;
-        sharedPreferences = this.getSharedPreferences(Constants.PREFERENCE_FILE_NAME,this.MODE_PRIVATE);
+        sharedPreferences = this.getSharedPreferences(Constants.PREFERENCE_FILE_NAME, this.MODE_PRIVATE);
         databaseReference = FirebaseDatabase.getInstance().getReference();
         progressDialog = new SpotsDialog.Builder().setContext(this).setCancelable(false).setTheme(R.style.Custom).build();
-        utils = new Utils(context_device,this);
+        utils = new Utils(context_device, this);
         returnIntent = new Intent();
-        serialStoredSharedPreferences = sharedPreferences.getString(Constants.SERIAL,null);
+        serialStoredSharedPreferences = sharedPreferences.getString(Constants.SERIAL, null);
         serial = "";
         // progress dialog show
         progressDialog.show();
@@ -68,34 +68,31 @@ public class Device extends AppCompatActivity{
     protected void onStart() {
         super.onStart();
         isSerialMatched = false;
-        String roll = sharedPreferences.getString(Constants.ROLL,null);
+        String roll = sharedPreferences.getString(Constants.ROLL, null);
         if (ContextCompat.checkSelfPermission(context_device, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(context_device, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED &&
                 ContextCompat.checkSelfPermission(context_device, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(context_device, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED){
+                ContextCompat.checkSelfPermission(context_device, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             serial = utils.serialGet();
             TelephonyManager telephonyManager = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
             imei = telephonyManager.getDeviceId();
             // Serial check
-            if (serial.equals(serialStoredSharedPreferences)){
+            if (serial.equals(serialStoredSharedPreferences)) {
                 isSerialMatched = true;
-            }
-            else{
+            } else {
                 result(false);
             }
-        }
-        else {
-            Toast.makeText(this,"App Permissions error",Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(this, "App Permissions error", Toast.LENGTH_LONG).show();
             result(false);
         }
         databaseReference.child("Students").child(roll).child("zimei").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 imeiStoredDatabase = dataSnapshot.getValue().toString();
-                if (imeiStoredDatabase.equals(imei) && isSerialMatched){
+                if (imeiStoredDatabase.equals(imei) && isSerialMatched) {
                     result(true);
-                }
-                else {
+                } else {
                     result(false);
                 }
             }
@@ -107,20 +104,19 @@ public class Device extends AppCompatActivity{
         });
     }
 
-    private void  result(boolean pass){
-        if (pass){
-            sharedPreferences.edit().putBoolean(Constants.DEVICE_CHECK,true).apply();
-            sharedPreferences.edit().putString(Constants.IMEI,imeiStoredDatabase).apply();
-            returnIntent.putExtra("resultDevice",true);
-            setResult(RESULT_OK,returnIntent);
+    private void result(boolean pass) {
+        if (pass) {
+            sharedPreferences.edit().putBoolean(Constants.DEVICE_CHECK, true).apply();
+            sharedPreferences.edit().putString(Constants.IMEI, imeiStoredDatabase).apply();
+            returnIntent.putExtra("resultDevice", true);
+            setResult(RESULT_OK, returnIntent);
             progressDialog.dismiss();
             finish();
-        }
-        else {
-            sharedPreferences.edit().putBoolean(Constants.DEVICE_CHECK,false).apply();
+        } else {
+            sharedPreferences.edit().putBoolean(Constants.DEVICE_CHECK, false).apply();
 //            sharedPreferences.edit().putString(Constants.IMEI,imeiStoredDatabase).apply();
-            returnIntent.putExtra("resultDevice",false);
-            setResult(RESULT_OK,returnIntent);
+            returnIntent.putExtra("resultDevice", false);
+            setResult(RESULT_OK, returnIntent);
             progressDialog.dismiss();
             finish();
         }

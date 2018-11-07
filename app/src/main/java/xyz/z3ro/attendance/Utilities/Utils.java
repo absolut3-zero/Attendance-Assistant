@@ -6,24 +6,27 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 
-public class Utils extends AppCompatActivity{
+public class Utils extends AppCompatActivity {
     public Context context;
     public Activity activity;
-    public Utils(){}
-    public Utils(Context context,Activity activity){
+
+    public Utils() {
+    }
+
+    public Utils(Context context, Activity activity) {
         this.context = context;
         this.activity = activity;
     }
 
     //Dialog to show on permission denied
-    public void dialogOnPermissionDeny(){
+    public void dialogOnPermissionDeny() {
         AlertDialog.Builder builder;
         builder = new AlertDialog.Builder(context);
         builder.setTitle("Notice")
@@ -37,7 +40,7 @@ public class Utils extends AppCompatActivity{
     }
 
     //Dialog to show on permission denied when button is clicked
-    public void dialogPermissionDeniedSubmit(){
+    public void dialogPermissionDeniedSubmit() {
         AlertDialog.Builder builder;
         builder = new AlertDialog.Builder(context);
         builder.setTitle("Notice")
@@ -59,13 +62,12 @@ public class Utils extends AppCompatActivity{
     }
 
     // Get Serial
-    public String serialGet(){
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-            if(ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED){
+    public String serialGet() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
                 return Build.getSerial();
-            }
-            else{
-                Log.d("serialGet","Failed to get Serial Number in API >=26");
+            } else {
+                Log.d("serialGet", "Failed to get Serial Number in API >=26");
                 return null;
             }
         }

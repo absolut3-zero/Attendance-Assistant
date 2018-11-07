@@ -1,42 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     tools:context="xyz.z3ro.attendance.MainActivity">
-    <include android:layout_height="wrap_content" android:layout_width="match_parent" layout="@layout/toolbar"/>
+
+    <include
+        layout="@layout/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <include android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="1.0dp" layout="@layout/card_proximity"/>
-            <include android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="1.0dp" layout="@layout/card_device"/>
-            <!--<TextView-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:layout_gravity="center"-->
-                <!--android:text="Or"-->
-                <!--android:textStyle="italic"-->
-                <!--android:textSize="15sp" />-->
-            <include android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_margin="1.0dp" layout="@layout/card_phone"/>
+
+            <include
+                layout="@layout/card_proximity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="1.0dp" />
+
+            <include
+                layout="@layout/card_device"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="1.0dp" />
+
+            <include
+                layout="@layout/card_phone"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="1.0dp" />
+
             <Button
                 android:id="@+id/button_present"
+                style="@style/Widget.AppCompat.Button.Colored"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="10.0dp"
-                android:text="@string/button_present"
-                style="@style/Widget.AppCompat.Button.Colored"/>
+                android:text="@string/button_present" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="120dp"
                 android:gravity="center"
-                android:text="@string/copyright"/>
+                android:text="@string/copyright" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

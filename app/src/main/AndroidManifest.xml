@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="xyz.z3ro.attendance">
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
-    <uses-permission android:name="android.permission.READ_SMS"/>
-    <uses-permission android:name="android.permission.RECEIVE_SMS"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.RECEIVE_SMS" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
-    <uses-feature android:name="android.hardware.fingerprint" android:required="false" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
 
     <application
@@ -21,38 +20,54 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity" android:screenOrientation="portrait">
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".FirstRun" android:screenOrientation="portrait">
+        <activity
+            android:name=".FirstRun"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="xyz.z3ro.attendance.FIRSTRUN" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".SignUp" android:screenOrientation="portrait">
+        <activity
+            android:name=".SignUp"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="xyz.z3ro.attendance.SIGNUP" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".LogIn" android:screenOrientation="portrait">
+        <activity
+            android:name=".LogIn"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="xyz.z3ro.attendance.LOGIN" />
 
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
-        <activity android:name=".Checks.Phone" android:screenOrientation="portrait"/>
-        <activity android:name=".Checks.Device" android:screenOrientation="portrait"/>
-        <activity android:name=".Checks.Proximity" android:screenOrientation="portrait"/>
-        <activity android:name=".Checks.Present" android:screenOrientation="portrait"/>
+        <activity
+            android:name=".Checks.Phone"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Checks.Device"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Checks.Proximity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name=".Checks.Present"
+            android:screenOrientation="portrait" />
     </application>
 
 </manifest>

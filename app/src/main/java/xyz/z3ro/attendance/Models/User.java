@@ -11,9 +11,11 @@ public class User {
     public String serial;
     public String zimei;
     public int No_of_days_present;
-    public User(){
+
+    public User() {
     }
-    public User (String first_name,String last_name,String roll,String phone_number,String serial,String zimei, int No_of_days_present){
+
+    public User(String first_name, String last_name, String roll, String phone_number, String serial, String zimei, int No_of_days_present) {
         this.first_name = first_name;
         this.last_name = last_name;
         this.roll = roll;
