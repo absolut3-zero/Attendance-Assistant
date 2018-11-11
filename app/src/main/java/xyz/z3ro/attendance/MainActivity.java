@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
@@ -25,17 +24,19 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import xyz.z3ro.attendance.Tasks.InternetCheckTask;
+import xyz.z3ro.attendance.Utilities.PermissionUtil;
 import xyz.z3ro.attendance.Utilities.Utils;
 
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity
+        implements View.OnClickListener, ActivityCompat.OnRequestPermissionsResultCallback {
     private Context context_main;
     private SharedPreferences sharedPreferences;
     private Utils utils;
-    private boolean permissionsGiven;
+    private PermissionUtil permissionUtil;
+    private WifiManager wifiManager;
 
     // Defining Views
     private Button proximityCheckButton;
@@ -45,6 +46,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView proximityCheckResult;
     private TextView deviceCheckResult;
     private TextView phoneCheckResult;
+
+    // TAGS
+    private static final String TAG = "MainActivity";
+    private static final int TAG_PHONE = 1;
+    private static final int TAG_SMS = 2;
+    private static final int TAG_LOCATION = 3;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +65,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         sharedPrefInitialisation();
 
         // First Run
-        boolean isFirstRun = sharedPreferences.getBoolean(Constants.FIRST_RUN, true);
-        if (isFirstRun) {
+        if (sharedPreferences.getBoolean(Constants.FIRST_RUN, true)) {
             FirstRun(this);
             finish();
         }
@@ -85,27 +91,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         deviceCheckButton.setOnClickListener(this);
         phoneCheckButton.setOnClickListener(this);
         presentButton.setOnClickListener(this);
+
+        // Turn off hotspot if it's on
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !wifiManager.isWifiEnabled()) {
+                Snackbar.make(findViewById(android.R.id.content), "Enable Wifi", Snackbar.LENGTH_LONG).show();
+            } else {
+                wifiManager.setWifiEnabled(true);
+            }
+        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if (wifiManager != null) {
-            wifiManager.setWifiEnabled(true);
-            wifiManager.setWifiEnabled(false);
-        }
+
         //Permission Check
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(context_main, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_main, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_main, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_main, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-                permCheck();
-            } else
-                permissionsGiven = true;
-        } else
-            permissionsGiven = true;
+        permissionUtil = new PermissionUtil(this, this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !permissionUtil.checkPermissions(Constants.LOCATION_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.PHONE_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.SMS_REQUEST_CODE)) {
+            permissionUtil.permCheck(Constants.LOCATION_REQUEST_CODE);
+        }
 //        TimeCheckTask timeCheckTask = new TimeCheckTask(context_main,presentButton,getString(R.string.time_start),getString(R.string.time_stop));
 //        timeCheckTask.execute();
 
@@ -138,8 +146,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (connected) {
                     boolean locationOn = isLocationEnabled();
                     if (locationOn) {
-                        Intent proximityIntent = new Intent(this, xyz.z3ro.attendance.Checks.Proximity.class);
-                        startActivityForResult(proximityIntent, 1);
+                        if (wifiManager.isWifiEnabled()) {
+                            Intent proximityIntent = new Intent(this, xyz.z3ro.attendance.Checks.Proximity.class);
+                            startActivityForResult(proximityIntent, TAG_LOCATION);
+                        } else
+                            Snackbar.make(findViewById(android.R.id.content), "Enable Wifi", Snackbar.LENGTH_LONG).show();
                     } else {
                         dialogOnLocationFalse();
                     }
@@ -151,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //
                 if (connected) {
                     Intent deviceIntent = new Intent(this, xyz.z3ro.attendance.Checks.Device.class);
-                    startActivityForResult(deviceIntent, 2);
+                    startActivityForResult(deviceIntent, TAG_PHONE);
                 } else {
                     Snackbar.make(findViewById(android.R.id.content), "No Internet Access!", Snackbar.LENGTH_SHORT).show();
                 }
@@ -160,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 //
                 if (connected) {
                     Intent phoneIntent = new Intent(this, xyz.z3ro.attendance.Checks.Phone.class);
-                    startActivityForResult(phoneIntent, 3);
+                    startActivityForResult(phoneIntent, TAG_SMS);
                 } else {
                     Snackbar.make(findViewById(android.R.id.content), "No Internet Access!", Snackbar.LENGTH_SHORT).show();
                 }
@@ -180,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case 1:
+            case TAG_LOCATION:
                 if (resultCode == RESULT_OK) {
                     boolean proximityCheck = data.getBooleanExtra("resultProximity", false);
                     if (proximityCheck) {
@@ -194,7 +205,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
                 break;
-            case 2:
+            case TAG_PHONE:
                 if (resultCode == RESULT_OK) {
                     boolean deviceCheck = data.getBooleanExtra("resultDevice", false);
                     if (deviceCheck) {
@@ -208,7 +219,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 }
                 break;
-            case 3:
+            case TAG_SMS:
                 if (resultCode == RESULT_OK) {
                     boolean phoneCheck = data.getBooleanExtra("resultPhone", false);
                     if (phoneCheck) {
@@ -230,27 +241,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(firstRun);
     }
 
-    // To check for required permissions
-    public void permCheck() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.READ_SMS, android.Manifest.permission.RECEIVE_SMS, android.Manifest.permission.ACCESS_FINE_LOCATION}, Constants.MY_REQUEST_CODE);
-        }
-    }
 
-    //Permission request handler
+    /**
+     * @param requestCode
+     * @param permissions
+     * @param grantResults
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case Constants.MY_REQUEST_CODE:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
-                    permissionsGiven = true;
-                } else {
-                    permissionsGiven = false;
+            case Constants.LOCATION_REQUEST_CODE:
+                if (!permissionUtil.verifyPermissions(grantResults)) {
+                    utils.dialogOnPermissionDeny();
+                } else
+                    permissionUtil.permCheck(Constants.PHONE_REQUEST_CODE);
+                break;
+            case Constants.PHONE_REQUEST_CODE:
+                if (!permissionUtil.verifyPermissions(grantResults)) {
+                    utils.dialogOnPermissionDeny();
+                } else
+                    permissionUtil.permCheck(Constants.SMS_REQUEST_CODE);
+                break;
+            case Constants.SMS_REQUEST_CODE:
+                if (!permissionUtil.verifyPermissions(grantResults)) {
                     utils.dialogOnPermissionDeny();
                 }
+                break;
         }
     }
 

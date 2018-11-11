@@ -1,11 +1,9 @@
 package xyz.z3ro.attendance;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,13 +30,12 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import dmax.dialog.SpotsDialog;
 import xyz.z3ro.attendance.Models.Serial;
 import xyz.z3ro.attendance.Models.User;
 import xyz.z3ro.attendance.Tasks.DateCheckTask;
 import xyz.z3ro.attendance.Tasks.InternetCheckTask;
+import xyz.z3ro.attendance.Utilities.PermissionUtil;
 import xyz.z3ro.attendance.Utilities.Utils;
 
 
@@ -49,6 +46,7 @@ public class SignUp extends AppCompatActivity {
     private TelephonyManager telephonyManager;
     private android.app.AlertDialog progressDialog;
     private Utils utils;
+    private PermissionUtil permissionUtil;
 
     private EditText firstName;
     private EditText lastName;
@@ -92,13 +90,11 @@ public class SignUp extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(context_signup, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_signup, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_signup, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_signup, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-                permCheck();
-            }
+        permissionUtil = new PermissionUtil(this, this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !permissionUtil.checkPermissions(Constants.LOCATION_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.PHONE_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.SMS_REQUEST_CODE)) {
+            permissionUtil.permCheck(Constants.LOCATION_REQUEST_CODE);
         }
         signUp.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -112,10 +108,9 @@ public class SignUp extends AppCompatActivity {
                     connected = false;
                 }
                 serialMatched = sharedPreferences.getBoolean(Constants.SERIAL_REGISTERED, true);
-                if (ContextCompat.checkSelfPermission(context_signup, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                        ContextCompat.checkSelfPermission(context_signup, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                        ContextCompat.checkSelfPermission(context_signup, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                        ContextCompat.checkSelfPermission(context_signup, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !permissionUtil.checkPermissions(Constants.LOCATION_REQUEST_CODE)
+                        && !permissionUtil.checkPermissions(Constants.PHONE_REQUEST_CODE)
+                        && !permissionUtil.checkPermissions(Constants.SMS_REQUEST_CODE)) {
                     progressDialog.dismiss();
                     utils.dialogPermissionDeniedSubmit();
                 } else {
@@ -154,27 +149,37 @@ public class SignUp extends AppCompatActivity {
         });
     }
 
-    // To check for required permissions
-    public void permCheck() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.READ_SMS, android.Manifest.permission.RECEIVE_SMS, android.Manifest.permission.ACCESS_FINE_LOCATION}, Constants.MY_REQUEST_CODE);
-        }
-    }
 
     //Permission request handler
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case Constants.MY_REQUEST_CODE:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+            case Constants.LOCATION_REQUEST_CODE:
+                if (permissionUtil.verifyPermissions(grantResults)) {
+                    sharedPreferences.edit().putBoolean(Constants.DIALOG, false).apply();
+                    permissionUtil.permCheck(Constants.PHONE_REQUEST_CODE);
+                } else {
+                    sharedPreferences.edit().putBoolean(Constants.DIALOG, true).apply();
+                    utils.dialogOnPermissionDeny();
+                }
+                break;
+            case Constants.PHONE_REQUEST_CODE:
+                if (permissionUtil.verifyPermissions(grantResults)) {
+                    sharedPreferences.edit().putBoolean(Constants.DIALOG, false).apply();
+                    permissionUtil.permCheck(Constants.SMS_REQUEST_CODE);
+                } else {
+                    sharedPreferences.edit().putBoolean(Constants.DIALOG, true).apply();
+                    utils.dialogOnPermissionDeny();
+                }
+                break;
+            case Constants.SMS_REQUEST_CODE:
+                if (permissionUtil.verifyPermissions(grantResults)) {
                     sharedPreferences.edit().putBoolean(Constants.DIALOG, false).apply();
                 } else {
                     sharedPreferences.edit().putBoolean(Constants.DIALOG, true).apply();
                     utils.dialogOnPermissionDeny();
                 }
+                break;
         }
     }
 

@@ -1,11 +1,9 @@
 package xyz.z3ro.attendance;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,7 +12,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.database.DataSnapshot;
@@ -31,10 +28,9 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import dmax.dialog.SpotsDialog;
 import xyz.z3ro.attendance.Tasks.InternetCheckTask;
+import xyz.z3ro.attendance.Utilities.PermissionUtil;
 import xyz.z3ro.attendance.Utilities.Utils;
 
 public class LogIn extends AppCompatActivity {
@@ -42,6 +38,7 @@ public class LogIn extends AppCompatActivity {
     private SharedPreferences sharedPreferences;
     private DatabaseReference databaseReference;
     private Utils utils;
+    private PermissionUtil permissionUtil;
     private android.app.AlertDialog progressDialog;
 
     private EditText rollNo;
@@ -67,6 +64,7 @@ public class LogIn extends AppCompatActivity {
         sharedPreferences = this.getSharedPreferences(Constants.PREFERENCE_FILE_NAME, this.MODE_PRIVATE);
         databaseReference = FirebaseDatabase.getInstance().getReference();
         utils = new Utils(context_login, this);
+        permissionUtil = new PermissionUtil(this, this);
         progressDialog = new SpotsDialog.Builder().setContext(context_login).setCancelable(false).setTheme(R.style.Custom).build();
         // Setting up views
         rollNo = findViewById(R.id.etRoll);
@@ -80,13 +78,10 @@ public class LogIn extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(context_login, Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_login, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_login, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(context_login, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-                permCheck();
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !permissionUtil.checkPermissions(Constants.LOCATION_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.PHONE_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.SMS_REQUEST_CODE)) {
+            permissionUtil.permCheck(Constants.LOCATION_REQUEST_CODE);
         }
         logIn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -98,10 +93,9 @@ public class LogIn extends AppCompatActivity {
                 } catch (InterruptedException | ExecutionException e) {
                     connected = false;
                 }
-                if (ContextCompat.checkSelfPermission(context_login, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                        ContextCompat.checkSelfPermission(context_login, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                        ContextCompat.checkSelfPermission(context_login, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                        ContextCompat.checkSelfPermission(context_login, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !permissionUtil.checkPermissions(Constants.LOCATION_REQUEST_CODE)
+                        && !permissionUtil.checkPermissions(Constants.PHONE_REQUEST_CODE)
+                        && !permissionUtil.checkPermissions(Constants.SMS_REQUEST_CODE)) {
                     progressDialog.dismiss();
                     utils.dialogPermissionDeniedSubmit();
                 } else {
@@ -123,24 +117,26 @@ public class LogIn extends AppCompatActivity {
         });
     }
 
-
-    private void permCheck() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.READ_SMS, android.Manifest.permission.RECEIVE_SMS, android.Manifest.permission.ACCESS_FINE_LOCATION}, Constants.MY_REQUEST_CODE);
-        }
-    }
-
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case Constants.MY_REQUEST_CODE:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
-                } else {
+            case Constants.LOCATION_REQUEST_CODE:
+                if (!permissionUtil.verifyPermissions(grantResults)) {
+                    utils.dialogOnPermissionDeny();
+                } else
+                    permissionUtil.permCheck(Constants.PHONE_REQUEST_CODE);
+                break;
+            case Constants.PHONE_REQUEST_CODE:
+                if (!permissionUtil.verifyPermissions(grantResults)) {
+                    utils.dialogOnPermissionDeny();
+                } else
+                    permissionUtil.permCheck(Constants.SMS_REQUEST_CODE);
+                break;
+            case Constants.SMS_REQUEST_CODE:
+                if (!permissionUtil.verifyPermissions(grantResults)) {
                     utils.dialogOnPermissionDeny();
                 }
+                break;
         }
     }
 
@@ -164,7 +160,7 @@ public class LogIn extends AppCompatActivity {
                         sharedPreferences.edit().putString(Constants.ROLL, rollNumber).apply();
                         Intent mainActivity = new Intent(context_login, MainActivity.class);
                         startActivity(mainActivity);
-                        Toast.makeText(context_login, "Log In Successful", Toast.LENGTH_LONG).show();
+//                        Toast.makeText(context_login, "Log In Successful", Toast.LENGTH_LONG).show();
                         progressDialog.dismiss();
                         finish();
                     } else {

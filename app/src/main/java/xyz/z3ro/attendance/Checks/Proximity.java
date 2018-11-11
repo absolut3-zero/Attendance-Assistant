@@ -76,22 +76,12 @@ public class Proximity extends AppCompatActivity {
         scanReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                int i;
-                List<ScanResult> scanResults = wifiManager.getScanResults();
-                int size = scanResults.size();
-                for (i = 0; i < size; i++) {
-                    if (scanResults.get(i).SSID.equals(networkSSID))
-                        isSSIDAvailable = true;
-                }
-                if (isSSIDAvailable) {
-//                    Toast.makeText(context,"SSID available",Toast.LENGTH_LONG).show();
-                    connect();
+                boolean success = intent.getBooleanExtra(WifiManager.EXTRA_RESULTS_UPDATED, false);
+
+                if (success) {
+                    scanSuccess();
                 } else {
-                    // TODO when ssid not available
-                    Log.d("XXXXX", "FAILED AT SSID RECEIVER");
-                    Log.d("XXXX", networkSSID + " " + networkPass + " " + bssidStored);
-                    result(false);
-                    Finish();
+                    scanFailure();
                 }
             }
         };
@@ -105,12 +95,10 @@ public class Proximity extends AppCompatActivity {
                         wifiInfo = wifiManager.getConnectionInfo();
                         if (wifiInfo.getBSSID().equals(bssidStored)) {
 //                            Toast.makeText(context,"Yeah!!!",Toast.LENGTH_LONG).show();
-                            // TODO SUCCESS
                             result(true);
                             Finish();
                         } else {
 //                            Toast.makeText(context,"Noooo!!",Toast.LENGTH_LONG).show();
-                            // TODO BSSID FAILURE
                             Log.d("XXXXX", "FAILED AT CONNECT RECEIVER");
                             result(false);
                             Finish();
@@ -161,7 +149,6 @@ public class Proximity extends AppCompatActivity {
         super.onDestroy();
     }
 
-
     private void getSSID() {
         databaseReference.child("Proximity").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -170,7 +157,9 @@ public class Proximity extends AppCompatActivity {
                 networkPass = dataSnapshot.child("pass").getValue().toString();
                 bssidStored = dataSnapshot.child("bssid").getValue().toString();
 //                Toast.makeText(context_proximity,networkSSID+" "+bssidStored,Toast.LENGTH_SHORT).show();
-                wifiManager.startScan();
+                boolean success = wifiManager.startScan();
+                if (!success)
+                    scanFailure();
             }
 
             @Override
@@ -181,6 +170,29 @@ public class Proximity extends AppCompatActivity {
                 Finish();
             }
         });
+    }
+
+    private void scanSuccess() {
+        List<ScanResult> scanResults = wifiManager.getScanResults();
+        for (int i = 0; i < scanResults.size(); i++) {
+            if (scanResults.get(i).SSID.equals(networkSSID)) {
+                isSSIDAvailable = true;
+                break;
+            }
+        }
+        if (isSSIDAvailable) {
+            connect();
+        } else {
+            Log.d("XXXXX", "FAILED AT SSID RECEIVER");
+            Log.d("XXXX", networkSSID + " " + networkPass + " " + bssidStored);
+            result(false);
+            Finish();
+        }
+    }
+
+    private void scanFailure() {
+        Log.d("XXXXX", "SCAN UNSUCCESSFUL");
+        result(false);
     }
 
     private void connect() {

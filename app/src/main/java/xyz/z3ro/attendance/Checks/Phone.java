@@ -189,8 +189,8 @@ public class Phone extends AppCompatActivity {
                             Log.w("SIGN_IN", "signInWithCredential:failure", task.getException());
                             if (task.getException() instanceof FirebaseAuthInvalidCredentialsException) {
                                 // The verification code entered was invalid
-                                Toast.makeText(context_phone, "Verification Failed", Toast.LENGTH_SHORT).show();
-                                result(false);
+//                                Toast.makeText(context_phone, "Verification Failed", Toast.LENGTH_SHORT).show();
+//                                result(false);
                             }
                         }
                     }

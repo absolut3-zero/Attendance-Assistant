@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.graphics.Typeface;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,10 +19,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import xyz.z3ro.attendance.Tasks.InternetCheckTask;
 import xyz.z3ro.attendance.Tasks.SerialCheckTask;
+import xyz.z3ro.attendance.Utilities.PermissionUtil;
 import xyz.z3ro.attendance.Utilities.Utils;
 
 public class FirstRun extends AppCompatActivity implements View.OnClickListener {
@@ -33,6 +31,7 @@ public class FirstRun extends AppCompatActivity implements View.OnClickListener 
 
     private AppCompatButton signUp;
     private AppCompatButton logIn;
+    private PermissionUtil permissionUtil;
 
     private final String TAG = "FirstRun";
 
@@ -56,18 +55,15 @@ public class FirstRun extends AppCompatActivity implements View.OnClickListener 
             sheet.setTypeface(typeface);
         }
 
-        // Assk for permission
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                    ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-                boolean isDialog = sharedPreferences.getBoolean(Constants.DIALOG, true);
-                if (isDialog) {
-                    dialogPermissionsExplaination();
-                } else {
-                    permCheck();
-                }
+        // Ask for permission
+        permissionUtil = new PermissionUtil(this, this);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !permissionUtil.checkPermissions(Constants.LOCATION_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.PHONE_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.SMS_REQUEST_CODE)) {
+            if (sharedPreferences.getBoolean(Constants.DIALOG, true)) {
+                dialogPermissionsExplaination();
+            } else {
+                permissionUtil.permCheck(Constants.LOCATION_REQUEST_CODE);
             }
         }
     }
@@ -93,10 +89,9 @@ public class FirstRun extends AppCompatActivity implements View.OnClickListener 
             e.printStackTrace();
             connected = false;
         }
-        if (ContextCompat.checkSelfPermission(context_firstrun, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(context_firstrun, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(context_firstrun, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(context_firstrun, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !permissionUtil.checkPermissions(Constants.LOCATION_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.PHONE_REQUEST_CODE)
+                && !permissionUtil.checkPermissions(Constants.SMS_REQUEST_CODE)) {
             utils.dialogPermissionDeniedSubmit();
         } else {
             switch (id) {
@@ -126,26 +121,33 @@ public class FirstRun extends AppCompatActivity implements View.OnClickListener 
         }
     }
 
-    // To check for required permissions
-    private void permCheck() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.RECEIVE_SMS) == PackageManager.PERMISSION_DENIED ||
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_DENIED) {
-            ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.READ_PHONE_STATE, android.Manifest.permission.READ_SMS, android.Manifest.permission.RECEIVE_SMS, android.Manifest.permission.ACCESS_FINE_LOCATION}, Constants.MY_REQUEST_CODE);
-        }
-    }
-
     //Permission request handler
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case Constants.MY_REQUEST_CODE:
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED && grantResults[2] == PackageManager.PERMISSION_GRANTED) {
+            case Constants.LOCATION_REQUEST_CODE:
+                if (permissionUtil.verifyPermissions(grantResults)) {
+                    sharedPreferences.edit().putBoolean(Constants.DIALOG, false).apply();
+                    permissionUtil.permCheck(Constants.PHONE_REQUEST_CODE);
+                } else {
+                    utils.dialogOnPermissionDeny();
+                }
+                break;
+            case Constants.PHONE_REQUEST_CODE:
+                if (permissionUtil.verifyPermissions(grantResults)) {
+                    sharedPreferences.edit().putBoolean(Constants.DIALOG, false).apply();
+                    permissionUtil.permCheck(Constants.SMS_REQUEST_CODE);
+                } else {
+                    utils.dialogOnPermissionDeny();
+                }
+                break;
+            case Constants.SMS_REQUEST_CODE:
+                if (permissionUtil.verifyPermissions(grantResults)) {
                     sharedPreferences.edit().putBoolean(Constants.DIALOG, false).apply();
                 } else {
                     utils.dialogOnPermissionDeny();
                 }
+                break;
         }
     }
 
@@ -157,7 +159,7 @@ public class FirstRun extends AppCompatActivity implements View.OnClickListener 
             @Override
             public void onCancel(DialogInterface dialogInterface) {
                 dialogInterface.dismiss();
-                permCheck();
+                permissionUtil.permCheck(Constants.LOCATION_REQUEST_CODE);
             }
         })
                 .setTitle("Important Stuff")
@@ -169,7 +171,7 @@ public class FirstRun extends AppCompatActivity implements View.OnClickListener 
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         dialog.dismiss();
-                        permCheck();
+                        permissionUtil.permCheck(Constants.LOCATION_REQUEST_CODE);
                     }
                 })
                 .show();

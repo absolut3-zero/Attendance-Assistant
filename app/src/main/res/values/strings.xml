@@ -32,7 +32,7 @@
     <string name="enter_roll_hint_extra">(exactly like you entered at the time of registering)</string>
     <!--TimeCheckTask-->
     <string name="time_start">90000</string>
-    <string name="time_stop">120000</string>
+    <string name="time_stop">160000</string>
     <!--PresentActivity-->
     <string name="attendance_done">Attendance Done!</string>
     <string name="attendance_already_done">Today\'s attendance already done</string>
